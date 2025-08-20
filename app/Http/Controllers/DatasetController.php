@@ -10,14 +10,28 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class DatasetController extends Controller
 {
-    public function index(Request $request)
+      public function index(Request $request)
     {
+        $query = Dataset::with('topik');
+        
+        // Tambahkan logika pencarian
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('nama_dataset', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('metadata_info', 'LIKE', "%{$searchTerm}%")
+                  ->orWhereHas('topik', function($q) use ($searchTerm) {
+                      $q->where('topik', 'LIKE', "%{$searchTerm}%");
+                  });
+            });
+        }
+        
+        $datasets = $query->paginate(10);
+        
         if ($request->ajax()) {
-            $data = Dataset::with('topik')->get();
-            return response()->json(['data' => $data]);
+            return response()->json(['data' => $datasets]);
         }
 
-        $datasets = Dataset::with('topik')->paginate(10);
         return view('datasets.index', compact('datasets'));
     }
 

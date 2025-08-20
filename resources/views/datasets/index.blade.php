@@ -13,6 +13,33 @@
                 </div>
 
                 <div class="card-body">
+                    <!-- Form Pencarian -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <form action="{{ route('datasets.index') }}" method="GET">
+                                <div class="input-group">
+                                    <input type="text" name="search" class="form-control" 
+                                           placeholder="Cari dataset..." value="{{ request('search') }}">
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="fas fa-search"></i> Cari
+                                    </button>
+                                    @if(request('search'))
+                                    <a href="{{ route('datasets.index') }}" class="btn btn-outline-danger">
+                                        <i class="fas fa-times"></i> Reset
+                                    </a>
+                                    @endif
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Info Hasil Pencarian -->
+                    @if(request('search'))
+                    <div class="alert alert-info">
+                        Menampilkan hasil pencarian untuk: <strong>"{{ request('search') }}"</strong>
+                    </div>
+                    @endif
+
                     <div class="table-responsive">
                         <table class="table table-striped table-bordered" id="datasets-table">
                             <thead class="table-dark">
@@ -58,7 +85,13 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="text-center">Tidak ada dataset yang tersedia</td>
+                                    <td colspan="6" class="text-center">
+                                        @if(request('search'))
+                                            Tidak ada dataset yang ditemukan untuk pencarian "{{ request('search') }}"
+                                        @else
+                                            Tidak ada dataset yang tersedia
+                                        @endif
+                                    </td>
                                 </tr>
                                 @endforelse
                             </tbody>
@@ -67,7 +100,7 @@
                     
                     @if($datasets->hasPages())
                     <div class="d-flex justify-content-center mt-4">
-                        {{ $datasets->links() }}
+                        {{ $datasets->appends(['search' => request('search')])->links() }}
                     </div>
                     @endif
                 </div>
@@ -82,6 +115,9 @@
     .table th, .table td {
         vertical-align: middle;
     }
+    .input-group {
+        max-width: 500px;
+    }
 </style>
 @endpush
 
@@ -90,13 +126,13 @@
     $(document).ready(function() {
         $('#datasets-table').DataTable({
             "pageLength": 10,
+            "searching": false, // Nonaktifkan pencarian DataTables karena kita sudah punya form
             "language": {
                 "lengthMenu": "Tampilkan _MENU_ data per halaman",
                 "zeroRecords": "Tidak ada data yang ditemukan",
                 "info": "Menampilkan halaman _PAGE_ dari _PAGES_",
                 "infoEmpty": "Tidak ada data yang tersedia",
                 "infoFiltered": "(disaring dari _MAX_ total data)",
-                "search": "Cari:",
                 "paginate": {
                     "first": "Pertama",
                     "last": "Terakhir",
@@ -107,4 +143,4 @@
         });
     });
 </script>
-@endpush
+@endpush   
